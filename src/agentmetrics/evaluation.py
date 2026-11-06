@@ -19,7 +19,7 @@ def evaluate(records: Iterable[Mapping]) -> dict:
             if field not in item:
                 raise ValueError(f"Record {index} missing {field}")
         if not isinstance(item["expected"], str) or not isinstance(item["predicted"], str):
-            raise ValueError(f"Record {index}: expected and predicted must be strings")
+            raise TypeError(f"Record {index}: expected and predicted must be strings")
         latency = item["latency_ms"]
         cost = item.get("cost_usd", 0)
         if isinstance(latency, bool) or not isinstance(latency, (int, float)) or not 0 <= latency < float("inf"):
