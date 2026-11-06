@@ -4,6 +4,18 @@ Open-source statistical evaluation platform for conversational AI agents.
 
 > Project under active development. Results must be reproducible; no fabricated benchmark claims.
 
+## Live demo
+
+Frontend: https://web-mrjoao28s-projects.vercel.app
+
+Python API: https://agentmetrics-api.onrender.com/health
+
+The public preview contains **synthetic sample scenarios**, explicitly labeled as such. Results from the interactive evaluation panel are computed by the Python evaluation engine, not fabricated benchmark claims. The overview KPI cards and charts remain illustrative and must not be interpreted as production measurements.
+
+## License
+
+Released under the [MIT License](LICENSE). Copyright (c) 2026 João Felipe Azevedo.
+
 ## Roadmap
 
 1. Reproducible evaluation engine and sample dataset
