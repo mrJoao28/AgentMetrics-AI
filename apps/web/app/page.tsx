@@ -1,42 +1,52 @@
-import { Activity, ArrowUpRight, BarChart3, Database, FileText, GitCompareArrows, Layers3, Settings2, ShieldCheck } from "lucide-react";
+import { Activity, ArrowUpRight, BarChart3, CalendarDays, Database, FileText, FlaskConical, GitCompareArrows, Settings2, ShieldCheck, Target, Zap, Coins } from "lucide-react";
 
+function BrandMark({size=34}:{size?:number}) {
+  return <svg width={size} height={size} viewBox="0 0 48 48" fill="none" role="img" aria-label="AgentMetrics AI logo">
+    <defs><linearGradient id="brand-gradient" x1="4" y1="44" x2="42" y2="4" gradientUnits="userSpaceOnUse"><stop stopColor="#7465F6"/><stop offset="1" stopColor="#A999FF"/></linearGradient></defs>
+    <path d="M20.2 6.5c1.8-3.1 5.8-3.1 7.6 0l18 31.2c1.9 3.3-.5 7.3-4.3 7.3h-4.4c-1.6 0-3.1-.9-3.9-2.3L24 26.8l-9.2 15.9c-.8 1.4-2.3 2.3-3.9 2.3H6.5c-3.8 0-6.2-4-4.3-7.3l18-31.2Z" fill="url(#brand-gradient)"/>
+    <path d="m24 27 7.7 13.4H16.3L24 27Z" fill="#10121C"/>
+  </svg>;
+}
 const nav = [
-  { label: "Overview", icon: BarChart3, active: true },
-  { label: "Evaluations", icon: Activity },
-  { label: "Comparisons", icon: GitCompareArrows },
+  { label: "Visão geral", icon: BarChart3, active: true },
+  { label: "Avaliações", icon: Activity },
+  { label: "Comparações", icon: GitCompareArrows },
   { label: "Datasets", icon: Database },
-  { label: "Reports", icon: FileText },
+  { label: "Experimentos", icon: FlaskConical },
+  { label: "Relatórios", icon: FileText },
 ];
 const evaluations = [
-  { name: "Customer support / baseline", dataset: "support-demo-v1", runs: "120", score: "84.2%", latency: "412 ms", status: "Complete" },
-  { name: "Customer support / candidate", dataset: "support-demo-v1", runs: "120", score: "88.3%", latency: "398 ms", status: "Complete" },
-  { name: "Order tracking / baseline", dataset: "orders-demo-v1", runs: "80", score: "91.3%", latency: "362 ms", status: "Complete" },
+  { id:"#12840", agent:"Agente A", task:"Extração de informações", result:"Correto", latency:"1,21 s", ok:true },
+  { id:"#12839", agent:"Agente B", task:"Classificação de texto", result:"Correto", latency:"1,48 s", ok:true },
+  { id:"#12838", agent:"Agente C", task:"Resposta aberta", result:"Incorreto", latency:"2,37 s", ok:false },
+  { id:"#12837", agent:"Agente A", task:"Raciocínio lógico", result:"Correto", latency:"1,09 s", ok:true },
+];
+const metrics = [
+  {label:"Avaliações realizadas",value:"12.840",change:"+18,4%",icon:Target,tone:"blue"},
+  {label:"Acurácia média",value:"91,2%",change:"+4,7 p.p.",icon:ShieldCheck,tone:"purple"},
+  {label:"Latência média",value:"1,43 s",change:"−22,1%",icon:Zap,tone:"blue"},
+  {label:"Custo estimado",value:"US$ 18,40",change:"−27,6%",icon:Coins,tone:"amber"},
 ];
 export default function Home() {
-  return (
-    <div className="shell">
-      <aside className="sidebar">
-        <div className="brand"><div className="brandmark"><Layers3 size={17}/></div><span>AgentMetrics</span><span className="brandtag">AI</span></div>
-        <div className="workspace"><span className="workspace-avatar">J</span><span><strong>Research workspace</strong><small>Personal workspace</small></span><span className="chevron">⌄</span></div>
-        <div className="nav-label">WORKSPACE</div>
-        <nav aria-label="Main navigation">{nav.map(({label,icon:Icon,active})=><a key={label} href={active?"/":"#preview"} className={active?"navitem active":"navitem"} aria-current={active?"page":undefined}><Icon size={17}/>{label}</a>)}</nav>
-        <div className="sidebar-bottom"><a href="#methodology" className="navitem"><ShieldCheck size={17}/>Methodology</a><a href="https://github.com/mrJoao28/AgentMetrics-AI" className="navitem"><Settings2 size={17}/>Repository <ArrowUpRight size={13}/></a><div className="sidebar-note">OPEN SOURCE · EARLY ACCESS</div></div>
-      </aside>
-      <main className="main">
-        <header className="topbar"><span>Workspace <span className="slash">/</span> Overview</span><span className="top-right"><span className="status-dot"/> Local demo dataset <span className="avatar">J</span></span></header>
-        <div className="content">
-          <div className="heading"><div><div className="eyebrow">ANALYTICS / OVERVIEW</div><h1>Evaluation overview</h1><p>Monitor quality, latency, and consistency across agent experiments.</p></div><span className="demo-tag">DEMO ENVIRONMENT</span></div>
-          <div className="notice"><ShieldCheck size={16}/><span>Illustrative data only. Metrics below are placeholders, not measured benchmark results.</span></div>
-          <section className="metrics" aria-label="Illustrative metrics">
-            {[{label:"Evaluation runs",value:"320",change:"Across 3 demo experiments"},{label:"Exact-match accuracy",value:"87.6%",change:"Demo aggregate"},{label:"Median latency",value:"398",unit:"ms",change:"Illustrative response time"},{label:"Agent variants",value:"03",change:"In demo workspace"}].map(m=><div className="metric" key={m.label}><span className="metric-label">{m.label}</span><div className="metric-value">{m.value}<span>{m.unit}</span></div><div className="metric-caption">{m.change}</div></div>)}
-          </section>
-          <div className="section-heading"><div><h2>Evaluation activity</h2><p>Example score distribution across recent runs</p></div><span className="muted">Last 8 runs · Demo</span></div>
-          <div className="chart-panel"><div className="chart-header"><span><span className="legend-dot"/> Exact-match accuracy</span><span>Higher is better</span></div><div className="chart"><div className="gridline g1"/><div className="gridline g2"/><div className="gridline g3"/><div className="bars">{[62,70,66,76,71,83,79,88].map((v,i)=><div key={i} className="bar-column"><div className="bar" style={{height:`${v}%`}}/><span>R{i+1}</span></div>)}</div></div></div>
-          <div className="section-heading table-title"><div><h2>Recent evaluations</h2><p>Example experiments and their metrics</p></div><span className="muted">3 demo evaluations</span></div>
-          <div className="table-wrap"><table><thead><tr><th>Evaluation</th><th>Dataset</th><th>Runs</th><th>Accuracy</th><th>Avg. latency</th><th>Status</th></tr></thead><tbody>{evaluations.map(e=><tr key={e.name}><td className="primary-cell">{e.name}</td><td>{e.dataset}</td><td>{e.runs}</td><td>{e.score}</td><td>{e.latency}</td><td><span className="complete"><span/> {e.status}</span></td></tr>)}</tbody></table></div>
-          <footer id="methodology">AgentMetrics AI · Engineering-first evaluation · <a href="https://github.com/mrJoao28/AgentMetrics-AI/blob/main/docs/statistical-methodology.md">Statistical methodology ↗</a></footer>
-        </div>
-      </main>
+ return <div className="shell">
+  <aside className="sidebar">
+   <div className="brand"><BrandMark size={42}/><div><strong>AgentMetrics AI</strong><small>Avaliação e análise de agentes de IA</small></div></div>
+   <nav aria-label="Navegação principal">{nav.map(({label,icon:Icon,active})=><a key={label} href={active?"/":"#em-desenvolvimento"} className={active?"navitem active":"navitem"} aria-current={active?"page":undefined}><Icon size={19}/><span>{label}</span></a>)}</nav>
+   <div className="sidebar-bottom"><a href="#metodologia" className="navitem"><Settings2 size={19}/><span>Configurações</span></a><div className="plan-card"><div className="plan-title">Versão demonstrativa</div><p>Interface em desenvolvimento</p><div className="plan-progress"><span/></div><small>Dados ilustrativos</small></div></div>
+  </aside>
+  <main className="main">
+   <header className="topbar"><div><h1>Visão Geral</h1><p>Monitore, avalie e compare o desempenho de agentes de IA.</p></div><div className="header-actions"><div className="date-range"><CalendarDays size={18}/> Últimos 7 dias <span>⌄</span></div><span className="avatar">JF</span></div></header>
+   <div className="content">
+    <div className="demo-banner"><ShieldCheck size={16}/><span>Prévia de design: todos os números e experimentos exibidos são ilustrativos, não resultados medidos.</span></div>
+    <section className="metrics" aria-label="Indicadores ilustrativos">{metrics.map(({label,value,change,icon:Icon,tone})=><article className="metric" key={label}><div className="metric-top"><span className={`metric-icon ${tone}`}><Icon size={22}/></span><span>{label}</span></div><div className="metric-bottom"><strong>{value}</strong><span className="positive">{change}</span></div></article>)}</section>
+    <div className="charts">
+     <section className="panel performance"><h2>Desempenho por Agente</h2><p>Comparativo de acurácia, precisão e recall.</p><div className="bar-chart"><div className="chart-grid"><span>100%</span><span>80%</span><span>60%</span><span>40%</span><span>20%</span><span>0%</span></div><div className="bar-groups">{[[93.8,92.9,94.1],[91.4,90.7,91.8],[88.5,87.9,89.2]].map((group,i)=><div className="bar-group" key={i}><div className="bar-set">{group.map((v,j)=><div className={`data-bar bar-${j}`} style={{height:`${v}%`}} title={`${v}%`} key={j}/>)}</div><span>Agente {String.fromCharCode(65+i)}</span></div>)}</div></div><div className="legend"><span><i className="purple-key"/> Acurácia</span><span><i className="green-key"/> Precisão</span><span><i className="blue-key"/> Recall</span></div></section>
+     <section className="panel latency"><h2>Distribuição de Latência</h2><p>Tempo de resposta dos agentes (segundos).</p><div className="curve-chart"><svg viewBox="0 0 500 220" preserveAspectRatio="none" aria-label="Curvas ilustrativas de distribuição de latência" role="img"><path d="M0 200 H500 M0 150 H500 M0 100 H500 M0 50 H500" stroke="#303644" strokeWidth="1"/><path d="M0 200 C70 200 74 18 132 32 S193 200 500 200" fill="#8875FF" fillOpacity=".16" stroke="#9180FF" strokeWidth="3"/><path d="M0 200 C100 200 115 72 183 65 S263 200 500 200" fill="#3BC995" fillOpacity=".12" stroke="#43C99B" strokeWidth="3"/><path d="M0 200 C145 200 171 92 243 92 S345 200 500 200" fill="#4CB5F4" fillOpacity=".12" stroke="#53B8FA" strokeWidth="3"/></svg><div className="curve-labels"><span>0,5</span><span>1,0</span><span>1,5</span><span>2,0</span><span>2,5</span><span>3,0</span></div></div><div className="legend"><span><i className="purple-key"/> Agente A</span><span><i className="green-key"/> Agente B</span><span><i className="blue-key"/> Agente C</span></div></section>
     </div>
-  );
+    <div className="bottom-grid"><section className="panel evaluations"><div className="panel-heading"><h2>Últimas Avaliações</h2><span>Prévia</span></div><div className="table-wrap"><table><thead><tr><th>#</th><th>Agente</th><th>Tarefa</th><th>Resultado</th><th>Latência</th></tr></thead><tbody>{evaluations.map(e=><tr key={e.id}><td>{e.id}</td><td className="agent-cell"><span className="agent-dot"/> {e.agent}</td><td>{e.task}</td><td><span className={e.ok?"result success":"result error"}>{e.result}</span></td><td>{e.latency}</td></tr>)}</tbody></table></div></section>
+    <section className="panel experiments"><h2>Status dos Experimentos</h2><p>3 experimentos ilustrativos</p>{[{name:"A/B – Estratégia de prompting",pct:72},{name:"Avaliação de RAG",pct:48},{name:"Comparação de agentes (v2)",pct:19}].map(e=><div className="experiment" key={e.name}><div className="experiment-icon"><FlaskConical size={17}/></div><div className="experiment-body"><div><span>{e.name}</span><strong>{e.pct}%</strong></div><div className="progress"><span style={{width:`${e.pct}%`}}/></div></div></div>)}</section></div>
+    <footer id="metodologia">AgentMetrics AI · <a href="https://github.com/mrJoao28/AgentMetrics-AI">Código aberto <ArrowUpRight size={12}/></a> · Demonstração visual, sem dados de produção</footer>
+   </div>
+  </main>
+ </div>;
 }
