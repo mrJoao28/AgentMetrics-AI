@@ -32,7 +32,7 @@ export default function Home() {
  return <div className="shell">
   <aside className="sidebar">
    <div className="brand"><BrandMark size={42}/><div><strong>AgentMetrics AI</strong><small>Avaliação e análise de agentes de IA</small></div></div>
-   <nav aria-label="Navegação principal">{nav.map(({label,icon:Icon,active})=><a key={label} href={active?"/":("href" in nav.find(item=>item.label===label)! ? (nav.find(item=>item.label===label) as {href?:string})?.href : "#avaliacoes")} className={active?"navitem active":"navitem"} aria-current={active?"page":undefined}><Icon size={19}/><span>{label}</span></a>)}</nav>
+   <nav aria-label="Navegação principal">{nav.map(({label,icon:Icon,active,...rest})=><a key={label} href={active?"/":("href" in rest ? rest.href : "#avaliacoes")} className={active?"navitem active":"navitem"} aria-current={active?"page":undefined}><Icon size={19}/><span>{label}</span></a>)}</nav>
    <div className="sidebar-bottom"><a href="#metodologia" className="navitem"><Settings2 size={19}/><span>Configurações</span></a><div className="plan-card"><div className="plan-title">Versão demonstrativa</div><p>Explore os cenários e importe seus dados</p><div className="plan-progress"><span/></div><small>Dados simulados</small></div></div>
   </aside>
   <main className="main">
