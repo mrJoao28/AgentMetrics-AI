@@ -33,7 +33,11 @@ Evaluating an AI agent requires more than a convincing response. AgentMetrics pr
 | **JSONL import** | Imports up to 10,000 records / 2 MB in the web UI | ✅ Available |
 | **Synthetic scenarios** | Lets visitors explore three labeled sample workloads | ✅ Available |
 | **Bootstrap statistics** | Paired bootstrap utility in Python | 🧪 Library utility |
-| **Persistent history** | Saved runs, teams and datasets | 🗓️ Planned |
+| **Persistent history** | Supabase dataset and evaluation-run storage helpers | 🧩 Backend utility; UI integration pending |
+| **Agent comparisons & trends** | Weighted per-agent metrics and chronological run trends | 🧩 Library utility; UI integration pending |
+| **Report export** | JSON/CSV export and SHA-256 reproducibility manifest helpers | 🧩 Library utility; UI integration pending |
+| **Authentication & workspaces** | Supabase Auth and workspace membership helpers | 🧩 Library utility; UI integration pending |
+| **95% confidence intervals** | Wilson interval utility for binary exact-match accuracy | 🧩 Library utility; dashboard integration pending |
 | **Semantic evaluation** | LLM-as-judge / meaning-aware scoring | 🗓️ Planned |
 
 ## 🖥️ Explore the demo
@@ -75,7 +79,20 @@ flowchart LR
 | Core | Python | Deterministic metrics and statistics |
 | Deployment | Vercel + Render | Web frontend and Python service |
 
-**Data flow:** your imported records are sent to the evaluation API for processing. There is no implemented persistent evaluation-history store. Avoid uploading sensitive or confidential data to the public demo.
+**Data flow:** your imported records are sent to the evaluation API for processing. The repository now includes Supabase-backed persistence helpers, but they are not yet wired into the public dashboard; the public demo does not automatically save evaluation history. Avoid uploading sensitive or confidential data to the public demo.
+
+### Supabase-backed modules (integration in progress)
+
+The codebase includes workspace-scoped dataset/run persistence (`evaluation-store.ts`), per-agent comparisons and trends (`run-analytics.ts`), JSON/CSV report export and SHA-256 manifests (`reproducibility.ts`), Supabase Auth/workspace helpers (`workspaces.ts`), and Wilson 95% confidence intervals (`confidence-interval.ts`). These modules were merged in PRs #12–#16, but **do not yet constitute a complete end-to-end dashboard feature**.
+
+To configure the Supabase client for development, add these to `apps/web/.env.local` alongside the API URL:
+
+```dotenv
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your_supabase_publishable_key
+```
+
+Use a publishable/anon key only; never expose a Supabase service-role or secret key through `NEXT_PUBLIC_`. Database tables, row-level security policies, authentication flows, workspace permissions, and UI integration must be validated against your own Supabase project before production use.
 
 ## 🚀 Quick start
 
@@ -208,13 +225,15 @@ We aim for deterministic tests, reviewable feature branches, clear assumptions a
 - [x] Next.js dashboard with JSONL import
 - [x] Interactive synthetic demo scenarios
 - [x] MIT open-source license
-- [ ] Persistent datasets and evaluation history
-- [ ] Per-agent comparisons and trend analysis from real runs
-- [ ] Confidence intervals surfaced in the web dashboard
-- [ ] Exportable reports and benchmark reproducibility manifests
-- [ ] Authentication and workspace management
+- [x] Persistent dataset/run storage helpers (UI integration pending)
+- [x] Per-agent comparison and run-trend utilities (UI integration pending)
+- [x] Wilson 95% confidence interval utility (dashboard display pending)
+- [x] JSON/CSV report and reproducibility-manifest utilities (UI integration pending)
+- [x] Supabase authentication and workspace helper modules (end-to-end flows pending)
+- [ ] Wire these modules into dashboard workflows and validate end-to-end behavior
+- [ ] Semantic evaluation / LLM-as-judge
 
-Features marked as planned are **not yet available**.
+Checked items above indicate **code merged into `main`**, not production-ready user-facing features.
 
 ## 🤝 Contributing
 
