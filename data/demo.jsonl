@@ -1,0 +1,3 @@
+{"expected":"Refund available","predicted":"Refund available","latency_ms":120,"cost_usd":0.001}
+{"expected":"Order shipped","predicted":"Order processing","latency_ms":210,"cost_usd":0.002}
+{"expected":"Contact support","predicted":"contact support","latency_ms":150,"cost_usd":0.0015}
