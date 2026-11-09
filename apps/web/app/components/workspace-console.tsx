@@ -3,13 +3,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { authClient, createWorkspace, listWorkspaces } from "../lib/workspaces";
-import { listRuns, saveDataset, saveRun, type EvaluationMetrics, type EvaluationRecord, type SavedRun } from "../lib/evaluation-store";
+import { listRuns, listDatasets, saveDataset, saveRun, type EvaluationMetrics, type EvaluationRecord, type SavedRun, type SavedDataset } from "../lib/evaluation-store";
 import { compareAgents, agentTrend } from "../lib/run-analytics";
 import { exportCsvReport, exportJsonReport, reproducibilityManifest } from "../lib/reproducibility";
 import { wilsonInterval } from "../lib/confidence-interval";
 
 type Workspace = { id: string; name: string; owner_id: string; created_at: string };
-type Props = { records: EvaluationRecord[]; metrics: EvaluationMetrics | null; source: string };
+type Props = { records: EvaluationRecord[]; metrics: EvaluationMetrics | null; source: string; onLoadDataset: (rows: EvaluationRecord[], name: string) => void };
 const configured = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY);
 
 function download(filename: string, data: string, mime: string) {
@@ -23,7 +23,7 @@ function download(filename: string, data: string, mime: string) {
 function normalize(value: string) { return value.trim().toLowerCase(); }
 function safeName(value: string) { return value.replace(/[^a-z0-9_-]+/gi, "-").slice(0, 60); }
 
-export default function WorkspaceConsole({ records, metrics, source }: Props) {
+export default function WorkspaceConsole({ records, metrics, source, onLoadDataset }: Props) {
   const client = useMemo(() => configured ? authClient() : null, []);
   const [user, setUser] = useState<User | null>(null);
   const [loadingSession, setLoadingSession] = useState(configured);
@@ -35,6 +35,7 @@ export default function WorkspaceConsole({ records, metrics, source }: Props) {
   const [newWorkspace, setNewWorkspace] = useState("");
   const [agentName, setAgentName] = useState("Meu agente");
   const [savedRuns, setSavedRuns] = useState<SavedRun[]>([]);
+  const [savedDatasets, setSavedDatasets] = useState<SavedDataset[]>([]);
   const [selectedRunId, setSelectedRunId] = useState("");
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
@@ -72,6 +73,12 @@ export default function WorkspaceConsole({ records, metrics, source }: Props) {
     setWorkspaceId(current => items.some(w => w.id === current) ? current : items[0]?.id ?? "");
   }, [getIdentity, user]);
 
+  const refreshDatasets = useCallback(async () => {
+    if (!user || !workspaceId) { setSavedDatasets([]); return; }
+    const { token } = await getIdentity();
+    setSavedDatasets(await listDatasets(token, workspaceId));
+  }, [getIdentity, user, workspaceId]);
+
   const refreshRuns = useCallback(async () => {
     if (!user || !workspaceId) { setSavedRuns([]); return; }
     const { token } = await getIdentity();
@@ -86,7 +93,8 @@ export default function WorkspaceConsole({ records, metrics, source }: Props) {
   }, [user, refreshWorkspaces]);
   useEffect(() => {
     void refreshRuns().catch(e => setError(e instanceof Error ? e.message : "Erro ao carregar avaliações."));
-  }, [refreshRuns]);
+    void refreshDatasets().catch(e => setError(e instanceof Error ? e.message : "Erro ao carregar datasets."));
+  }, [refreshRuns, refreshDatasets]);
 
   async function execute(task: () => Promise<void>) {
     setBusy(true); setError(""); setNotice("");
@@ -126,6 +134,7 @@ export default function WorkspaceConsole({ records, metrics, source }: Props) {
       if (!workspaceId) throw new Error("Selecione um espaço de trabalho.");
       const { token, userId } = await getIdentity();
       await saveDataset(token, workspaceId, source.slice(0, 120), records, userId);
+      await refreshDatasets();
       setNotice("Dataset salvo com sucesso.");
     });
   }
@@ -180,6 +189,14 @@ export default function WorkspaceConsole({ records, metrics, source }: Props) {
           <button type="button" className="eval-run" disabled={busy || !metrics} onClick={() => void persistRun()}>Salvar avaliação atual</button>
           <button type="button" className="eval-run secondary-action" disabled={busy || !records.length} onClick={() => void persistDataset()}>Salvar dataset atual</button>
           <button type="button" className="workspace-link" disabled={busy} onClick={() => void execute(refreshRuns)}>Atualizar histórico</button>
+        </div>}
+        {workspaceId && <div className="workspace-history">
+          <h3>Datasets salvos ({savedDatasets.length})</h3>
+          {!savedDatasets.length ? <p>Nenhum dataset salvo neste espaço.</p> :
+            <div className="workspace-dataset-list">{savedDatasets.map(dataset =>
+              <div className="workspace-dataset" key={dataset.id}><div><strong>{dataset.name}</strong><small>{dataset.records.length} registros · {new Date(dataset.created_at).toLocaleString("pt-BR")}</small></div>
+                <button type="button" className="eval-run secondary-action" onClick={() => { onLoadDataset(dataset.records, dataset.name); setNotice("Dataset restaurado. Execute a avaliação para obter novos resultados."); }}>Carregar</button>
+              </div>)}</div>}
         </div>}
         {workspaceId && <div className="workspace-history" id="relatorios">
           <h3>Histórico de avaliações ({savedRuns.length})</h3>
