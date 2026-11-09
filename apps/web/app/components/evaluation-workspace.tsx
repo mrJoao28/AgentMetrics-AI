@@ -33,20 +33,22 @@ function makeDemo(index: number): RecordRow[] {
   });
 }
 
-export default function EvaluationWorkspace() {
+export type DashboardEvaluation = { metrics: Result; records: RecordRow[]; source: string };
+export default function EvaluationWorkspace({ onCompleted }: { onCompleted?: (evaluation: DashboardEvaluation) => void }) {
   const [rows,setRows] = useState<RecordRow[]>(sample);
   const [scenarioIndex,setScenarioIndex] = useState(0);
   const [result,setResult] = useState<Result|null>(null);
   const [error,setError] = useState("");
   const [busy,setBusy] = useState(false);
   const [source,setSource] = useState("Exemplo do repositório (3 registros)");
-  async function run(records: RecordRow[] = rows) {
+  async function run(records: RecordRow[] = rows, recordSource: string = source) {
     setBusy(true);setError("");setResult(null);
     try {
       const response = await fetch("/api/evaluate",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({records})});
       const body = await response.json();
       if (!response.ok) throw new Error(body.error ?? body.detail ?? "Falha na avaliação");
       setResult(body as Result);
+      onCompleted?.({ metrics: body as Result, records, source: recordSource });
     } catch(e) {setError(e instanceof Error?e.message:"Erro desconhecido");}
     finally {setBusy(false);}
   }
@@ -57,7 +59,7 @@ export default function EvaluationWorkspace() {
     setSource(`SIMULADO — ${scenarios[index].name}`);
     setResult(null);
     setError("");
-    void run(records);
+    void run(records, `SIMULADO — ${scenarios[index].name}`);
   }
   async function upload(file:File) {
     setResult(null);setError("");
