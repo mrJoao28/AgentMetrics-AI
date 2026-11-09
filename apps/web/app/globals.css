@@ -50,3 +50,24 @@ html{scroll-behavior:smooth}
 .workspace-dataset strong{font-size:13px;overflow-wrap:anywhere}
 .workspace-dataset small{font-size:11px;color:#aab4c7}
 @media(max-width:700px){.workspace-dataset{align-items:stretch;flex-direction:column}}
+
+/* Launch polish: live dashboard, no simulated metrics */
+.dashboard-empty{display:flex;align-items:center;justify-content:space-between;gap:24px;margin-bottom:20px;padding:22px 25px;border:1px solid #45416e;border-radius:13px;background:linear-gradient(115deg,#252341,#181e2c)}
+.dashboard-empty strong{font-size:18px}
+.dashboard-empty p{color:#b8bed0;line-height:1.6;max-width:650px;font-size:13px;margin:8px 0 0}
+.dashboard-empty .eval-run{background:#7465f6;white-space:nowrap;gap:8px}
+.dashboard-source{margin:0 0 15px!important}
+.metric-bottom{margin-left:0}
+.metric-bottom strong{font-size:24px;overflow-wrap:anywhere}
+.chart-empty{display:grid;place-items:center;text-align:center;min-height:245px;padding:30px;color:#aeb6c6!important;font-size:13px!important}
+.latency-bars{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;align-items:end;min-height:260px;padding:20px 4px 0}
+.latency-column{display:flex;flex-direction:column;align-items:center;min-width:0;gap:7px;height:240px;color:#b5c2d5}
+.latency-column>span{font-size:12px}
+.latency-column small{min-height:38px;font-size:10px;text-align:center;overflow-wrap:anywhere}
+.latency-track{height:175px;min-height:0;width:100%;max-width:64px;display:flex;align-items:flex-end;border-bottom:1px solid #495266}
+.latency-track>div{width:100%;min-height:0;border-radius:6px 6px 0 0;background:linear-gradient(180deg,#9c8bff,#6259c9)}
+.method-details{display:grid;gap:13px;margin-top:22px}
+.method-details p{line-height:1.65;font-size:12px}
+.method-details strong{color:#e7e4ff}
+.topbar,.charts,#avaliacoes,.workspace-console,#visao-geral,#metodologia{scroll-margin-top:12px}
+@media(max-width:700px){.dashboard-empty{flex-direction:column;align-items:stretch;padding:18px}.dashboard-empty .eval-run{align-self:flex-start}.latency-bars{gap:6px}.latency-column small{font-size:9px}.metric-bottom strong{font-size:19px}}
