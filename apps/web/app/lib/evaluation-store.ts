@@ -30,3 +30,15 @@ export async function listRuns(token: string, workspaceId: string) {
   if (error) throw error;
   return (data ?? []) as SavedRun[];
 }
+
+export type SavedDataset = { id: string; name: string; created_at: string; records: EvaluationRecord[] };
+
+export async function listDatasets(token: string, workspaceId: string) {
+  const { data, error } = await getSupabase(token).from("datasets")
+    .select("id,name,created_at,records")
+    .eq("workspace_id", workspaceId)
+    .order("created_at", { ascending: false })
+    .limit(250);
+  if (error) throw error;
+  return (data ?? []) as SavedDataset[];
+}

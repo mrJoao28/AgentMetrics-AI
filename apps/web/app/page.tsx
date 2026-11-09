@@ -12,9 +12,9 @@ const nav = [
   { label: "Visão geral", icon: BarChart3, active: true },
   { label: "Avaliações", icon: Activity, href: "#avaliacoes" },
   { label: "Comparações", icon: GitCompareArrows, href: "#comparacoes" },
-  { label: "Datasets", icon: Database, href: "#avaliacoes" },
+  { label: "Datasets", icon: Database, href: "#datasets" },
   { label: "Experimentos", icon: FlaskConical, href: "#experimentos" },
-  { label: "Relatórios", icon: FileText, href: "#metodologia" },
+  { label: "Relatórios", icon: FileText, href: "#relatorios" },
 ];
 const evaluations = [
   { id:"#12840", agent:"Agente A", task:"Extração de informações", result:"Correto", latency:"1,21 s", ok:true },

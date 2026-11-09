@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import WorkspaceConsole from "./workspace-console";
+import { exportCsvReport, exportJsonReport, reproducibilityManifest } from "../lib/reproducibility";
+import { wilsonInterval } from "../lib/confidence-interval";
 
 type Result = { count: number; exact_match_accuracy: number; mean_latency_ms: number; total_cost_usd: number };
 type RecordRow = {expected:string;predicted:string;latency_ms:number;cost_usd:number};
@@ -73,7 +76,21 @@ export default function EvaluationWorkspace() {
       setRows(parsed);setSource(`Arquivo importado — ${file.name}`);
     }catch(e){setError(e instanceof Error?e.message:"Falha na leitura");}
   }
-  return <section className="panel live-evaluation" aria-labelledby="live-heading">
+  const successes = rows.filter(r => r.expected.trim().toLowerCase() === r.predicted.trim().toLowerCase()).length;
+  const confidence = result ? wilsonInterval(successes, rows.length) : null;
+  async function exportCurrent(type: "json" | "csv") {
+    if (!result) return;
+    const content = type === "csv"
+      ? exportCsvReport(rows)
+      : exportJsonReport(await reproducibilityManifest(rows, result, source), rows);
+    const url = URL.createObjectURL(new Blob([content], {type:type === "csv" ? "text/csv;charset=utf-8" : "application/json"}));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "agentmetrics-evaluation." + type;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+  return <><section className="panel live-evaluation" aria-labelledby="live-heading">
     <div className="panel-heading"><h2 id="live-heading">Avaliação com dados reais</h2><span>Motor Python</span></div>
     <p>Explore cenários simulados ou importe um JSONL próprio. Os cenários de demonstração são fictícios, mas suas métricas são calculadas pelo motor Python.</p>
     <div className="demo-banner" role="note"><strong>Modo demonstração:</strong> exemplos fictícios, não representam desempenho de agentes reais.</div>
@@ -82,6 +99,16 @@ export default function EvaluationWorkspace() {
     <div className="eval-source">Fonte: {source} · {rows.length.toLocaleString("pt-BR")} registros</div>
     {error&&<p className="eval-error" role="alert">{error}</p>}
     {result&&<div className="eval-results" aria-live="polite"><div><small>Registros avaliados</small><strong>{result.count.toLocaleString("pt-BR")}</strong></div><div><small>Correspondência exata</small><strong>{(result.exact_match_accuracy*100).toFixed(1)}%</strong></div><div><small>Latência média</small><strong>{result.mean_latency_ms.toFixed(1)} ms</strong></div><div><small>Custo total</small><strong>US$ {result.total_cost_usd.toFixed(4)}</strong></div></div>}
+    {result && <div className="eval-controls">
+      {confidence && <span className="eval-source">Intervalo Wilson 95%: {(confidence.lower * 100).toFixed(1)}% – {(confidence.upper * 100).toFixed(1)}%</span>}
+      <button type="button" className="eval-run" onClick={() => void exportCurrent("json")}>Baixar relatório JSON</button>
+      <button type="button" className="eval-run" onClick={() => void exportCurrent("csv")}>Baixar CSV</button>
+    </div>}
     <p className="eval-method">Acurácia por correspondência exata normalizada (espaços externos e caixa); não representa precisão, recall ou qualidade semântica.</p>
-  </section>;
+  </section><WorkspaceConsole records={rows} metrics={result} source={source} onLoadDataset={(saved, name) => {
+      setRows(saved.map(r => ({expected:r.expected,predicted:r.predicted,latency_ms:r.latency_ms,cost_usd:r.cost_usd ?? 0})));
+      setSource("Dataset salvo — " + name);
+      setResult(null);
+      setError("");
+    }} /></>;
 }
