@@ -10,6 +10,6 @@ export function exportJsonReport(manifest: Record<string,unknown>, records: Eval
   return JSON.stringify({manifest,records},null,2);
 }
 export function exportCsvReport(records: EvaluationRecord[]) {
-  const escape=(s:unknown)=>'"'+String(s??"").replaceAll('"','""')+'"';
+  const escape=(s:unknown)=>{const raw=String(s??"");const safe=/^[\\s]*[=+@-]/.test(raw)? "'" + raw : raw;return '"' + safe.replaceAll('"','""') + '"';};
   return ["expected,predicted,latency_ms,cost_usd",...records.map(r=>[r.expected,r.predicted,r.latency_ms,r.cost_usd??0].map(escape).join(","))].join("\r\n");
 }
