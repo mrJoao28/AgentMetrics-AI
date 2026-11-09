@@ -34,7 +34,7 @@ function makeDemo(index: number): RecordRow[] {
 }
 
 export type DashboardEvaluation = { metrics: Result; records: RecordRow[]; source: string };
-export default function EvaluationWorkspace({ onCompleted }: { onCompleted?: (evaluation: DashboardEvaluation) => void }) {
+export default function EvaluationWorkspace({ onCompleted }: { onCompleted?: (evaluation: DashboardEvaluation | null) => void }) {
   const [rows,setRows] = useState<RecordRow[]>(sample);
   const [scenarioIndex,setScenarioIndex] = useState(0);
   const [result,setResult] = useState<Result|null>(null);
@@ -42,7 +42,7 @@ export default function EvaluationWorkspace({ onCompleted }: { onCompleted?: (ev
   const [busy,setBusy] = useState(false);
   const [source,setSource] = useState("Exemplo do repositório (3 registros)");
   async function run(records: RecordRow[] = rows, recordSource: string = source) {
-    setBusy(true);setError("");setResult(null);
+    setBusy(true);setError("");setResult(null);onCompleted?.(null);
     try {
       const response = await fetch("/api/evaluate",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({records})});
       const body = await response.json();
@@ -58,11 +58,12 @@ export default function EvaluationWorkspace({ onCompleted }: { onCompleted?: (ev
     setRows(records);
     setSource(`SIMULADO — ${scenarios[index].name}`);
     setResult(null);
+    onCompleted?.(null);
     setError("");
     void run(records, `SIMULADO — ${scenarios[index].name}`);
   }
   async function upload(file:File) {
-    setResult(null);setError("");
+    setResult(null);setError("");onCompleted?.(null);
     if (file.size>2_000_000){setError("Arquivo acima de 2 MB.");return;}
     try {
       const lines=(await file.text()).split(/\r?\n/).filter(x=>x.trim());
@@ -111,6 +112,7 @@ export default function EvaluationWorkspace({ onCompleted }: { onCompleted?: (ev
       setRows(saved.map(r => ({expected:r.expected,predicted:r.predicted,latency_ms:r.latency_ms,cost_usd:r.cost_usd ?? 0})));
       setSource("Dataset salvo — " + name);
       setResult(null);
+      onCompleted?.(null);
       setError("");
     }} /></>;
 }
