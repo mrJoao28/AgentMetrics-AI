@@ -166,7 +166,7 @@ export default function WorkspaceConsole({ records, metrics, source, onLoadDatas
     else download(filename + ".csv", exportCsvReport(selectedRun.records), "text/csv;charset=utf-8");
   }
 
-  return <section className="panel workspace-console" aria-labelledby="workspace-heading">
+  return <section className="panel workspace-console" id="datasets" aria-labelledby="workspace-heading">
     <div className="panel-heading"><h2 id="workspace-heading">Workspace & histórico</h2><span>Dados persistidos</span></div>
     <p>Faça login para salvar datasets e avaliações em um espaço protegido por permissões do Supabase. Os dados da demonstração pública não são salvos automaticamente.</p>
     {!configured ? <div className="workspace-notice">Persistência ainda não configurada neste ambiente. Defina NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY na Vercel para ativar contas e histórico.</div>
@@ -179,7 +179,7 @@ export default function WorkspaceConsole({ records, metrics, source, onLoadDatas
       </form>
     : <div className="workspace-stack">
         <div className="workspace-toolbar"><span>Conectado: <strong>{user.email}</strong></span><button className="workspace-link" type="button" onClick={() => void execute(async () => { await client?.auth.signOut(); setNotice("Sessão encerrada."); })}>Sair</button></div>
-        <div className="workspace-form" id="datasets">
+        <div className="workspace-form">
           <label>Espaço de trabalho<select value={workspaceId} onChange={e => setWorkspaceId(e.target.value)}><option value="">Selecione</option>{workspaces.map(w => <option key={w.id} value={w.id}>{w.name}</option>)}</select></label>
           <label>Novo espaço<input maxLength={120} placeholder="Nome do espaço" value={newWorkspace} onChange={e => setNewWorkspace(e.target.value)} /></label>
           <button type="button" className="eval-run" disabled={busy || !newWorkspace.trim()} onClick={() => void createNewWorkspace()}>Criar espaço</button>
@@ -198,7 +198,7 @@ export default function WorkspaceConsole({ records, metrics, source, onLoadDatas
                 <button type="button" className="eval-run secondary-action" onClick={() => { onLoadDataset(dataset.records, dataset.name); setNotice("Dataset restaurado. Execute a avaliação para obter novos resultados."); }}>Carregar</button>
               </div>)}</div>}
         </div>}
-        {workspaceId && <div className="workspace-history" id="relatorios">
+        {workspaceId && <div className="workspace-history">
           <h3>Histórico de avaliações ({savedRuns.length})</h3>
           {!savedRuns.length ? <p>Nenhuma avaliação salva neste espaço.</p> : <>
             <label>Avaliação<select value={selectedRunId} onChange={e => setSelectedRunId(e.target.value)}>{savedRuns.map(r => <option key={r.id} value={r.id}>{r.agent_name} · {new Date(r.created_at).toLocaleString("pt-BR")}</option>)}</select></label>
@@ -212,6 +212,7 @@ export default function WorkspaceConsole({ records, metrics, source, onLoadDatas
           {selectedRun && <p className="workspace-trend">Tendência de {selectedRun.agent_name}: {selectedTrend.map(t => (t.accuracy * 100).toFixed(1) + "%").join(" → ")} ({selectedTrend.length} execuções em ordem cronológica).</p>}
         </div>}
       </div>}
+    <span id="relatorios" className="workspace-section-anchor" aria-hidden="true"/>
     {error && <p role="alert" className="eval-error">{error}</p>}
     {notice && <p role="status" className="workspace-notice">{notice}</p>}
   </section>;
