@@ -105,5 +105,10 @@ export default function EvaluationWorkspace() {
       <button type="button" className="eval-run" onClick={() => void exportCurrent("csv")}>Baixar CSV</button>
     </div>}
     <p className="eval-method">Acurácia por correspondência exata normalizada (espaços externos e caixa); não representa precisão, recall ou qualidade semântica.</p>
-  </section><WorkspaceConsole records={rows} metrics={result} source={source} /></>;
+  </section><WorkspaceConsole records={rows} metrics={result} source={source} onLoadDataset={(saved, name) => {
+      setRows(saved.map(r => ({expected:r.expected,predicted:r.predicted,latency_ms:r.latency_ms,cost_usd:r.cost_usd ?? 0})));
+      setSource("Dataset salvo — " + name);
+      setResult(null);
+      setError("");
+    }} /></>;
 }
