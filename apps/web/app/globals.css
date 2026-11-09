@@ -43,3 +43,10 @@ html{scroll-behavior:smooth}
 .workspace-console .secondary-action{background:#252b3a;border-color:#454d65}
 #datasets,#relatorios{scroll-margin-top:24px}
 @media(max-width:700px){.workspace-form label,.workspace-actions label{flex-basis:100%}.workspace-form button,.workspace-actions button{flex:1}.workspace-summary span{flex:1}}
+
+.workspace-dataset-list{display:grid;gap:10px;margin-top:12px}
+.workspace-dataset{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:13px 15px;border-radius:9px;background:#141b28;border:1px solid #343d50}
+.workspace-dataset>div{display:grid;gap:6px;min-width:0}
+.workspace-dataset strong{font-size:13px;overflow-wrap:anywhere}
+.workspace-dataset small{font-size:11px;color:#aab4c7}
+@media(max-width:700px){.workspace-dataset{align-items:stretch;flex-direction:column}}
