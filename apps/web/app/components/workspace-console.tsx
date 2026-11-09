@@ -167,7 +167,7 @@ export default function WorkspaceConsole({ records, metrics, source, onLoadDatas
   }
 
   return <section className="panel workspace-console" id="datasets" aria-labelledby="workspace-heading">
-    <div className="panel-heading"><h2 id="workspace-heading">Workspace & histórico</h2><span>Dados persistidos</span></div>
+    <span id={user ? undefined : "relatorios"} aria-hidden="true"/><div className="panel-heading"><h2 id="workspace-heading">Workspace & histórico</h2><span>Dados persistidos</span></div>
     <p>Faça login para salvar datasets e avaliações em um espaço protegido por permissões do Supabase. Os dados da demonstração pública não são salvos automaticamente.</p>
     {!configured ? <div className="workspace-notice">Persistência ainda não configurada neste ambiente. Defina NEXT_PUBLIC_SUPABASE_URL e NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY na Vercel para ativar contas e histórico.</div>
     : loadingSession ? <p aria-live="polite">Verificando sessão…</p>
