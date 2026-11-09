@@ -33,11 +33,11 @@ Evaluating an AI agent requires more than a convincing response. AgentMetrics pr
 | **JSONL import** | Imports up to 10,000 records / 2 MB in the web UI | ✅ Available |
 | **Synthetic scenarios** | Lets visitors explore three labeled sample workloads | ✅ Available |
 | **Bootstrap statistics** | Paired bootstrap utility in Python | 🧪 Library utility |
-| **Persistent history** | Supabase dataset and evaluation-run storage helpers | 🧩 Backend utility; UI integration pending |
-| **Agent comparisons & trends** | Weighted per-agent metrics and chronological run trends | 🧩 Library utility; UI integration pending |
-| **Report export** | JSON/CSV export and SHA-256 reproducibility manifest helpers | 🧩 Library utility; UI integration pending |
-| **Authentication & workspaces** | Supabase Auth and workspace membership helpers | 🧩 Library utility; UI integration pending |
-| **95% confidence intervals** | Wilson interval utility for binary exact-match accuracy | 🧩 Library utility; dashboard integration pending |
+| **Persistent history** | Authenticated dataset and evaluation-run saving with Supabase RLS | ✅ Connected in workspace UI (beta) |
+| **Agent comparisons & trends** | Weighted comparisons and chronological trends from saved runs | ✅ Workspace UI (beta) |
+| **Report export** | Download JSON/CSV reports and SHA-256 reproducibility manifests | ✅ Available after evaluations |
+| **Authentication & workspaces** | Email/password login, workspace creation and selection | ✅ Workspace UI (beta) |
+| **95% confidence intervals** | Wilson intervals calculated from labeled evaluation records | ✅ Shown after evaluation |
 | **Semantic evaluation** | LLM-as-judge / meaning-aware scoring | 🗓️ Planned |
 
 ## 🖥️ Explore the demo
@@ -79,11 +79,11 @@ flowchart LR
 | Core | Python | Deterministic metrics and statistics |
 | Deployment | Vercel + Render | Web frontend and Python service |
 
-**Data flow:** your imported records are sent to the evaluation API for processing. The repository now includes Supabase-backed persistence helpers, but they are not yet wired into the public dashboard; the public demo does not automatically save evaluation history. Avoid uploading sensitive or confidential data to the public demo.
+**Data flow:** your imported records are sent to the evaluation API for processing. An authenticated workspace section now connects Supabase-backed persistence, comparisons, history and exports; the public demo does not automatically save evaluation history. Avoid uploading sensitive or confidential data to the public demo.
 
 ### Supabase-backed modules (integration in progress)
 
-The codebase includes workspace-scoped dataset/run persistence (`evaluation-store.ts`), per-agent comparisons and trends (`run-analytics.ts`), JSON/CSV report export and SHA-256 manifests (`reproducibility.ts`), Supabase Auth/workspace helpers (`workspaces.ts`), and Wilson 95% confidence intervals (`confidence-interval.ts`). These modules were merged in PRs #12–#16, but **do not yet constitute a complete end-to-end dashboard feature**.
+The codebase includes workspace-scoped dataset/run persistence (`evaluation-store.ts`), per-agent comparisons and trends (`run-analytics.ts`), JSON/CSV report export and SHA-256 manifests (`reproducibility.ts`), Supabase Auth/workspace helpers (`workspaces.ts`), and Wilson 95% confidence intervals (`confidence-interval.ts`). These modules were introduced in PRs #12–#16 and connected to the workspace UI in PR #17. **Authentication, write permissions and data persistence still require end-to-end validation with a real Supabase account before production sign-off.**
 
 To configure the Supabase client for development, add these to `apps/web/.env.local` alongside the API URL:
 
@@ -225,15 +225,15 @@ We aim for deterministic tests, reviewable feature branches, clear assumptions a
 - [x] Next.js dashboard with JSONL import
 - [x] Interactive synthetic demo scenarios
 - [x] MIT open-source license
-- [x] Persistent dataset/run storage helpers (UI integration pending)
-- [x] Per-agent comparison and run-trend utilities (UI integration pending)
-- [x] Wilson 95% confidence interval utility (dashboard display pending)
-- [x] JSON/CSV report and reproducibility-manifest utilities (UI integration pending)
-- [x] Supabase authentication and workspace helper modules (end-to-end flows pending)
-- [ ] Wire these modules into dashboard workflows and validate end-to-end behavior
+- [x] Persist datasets and evaluation runs through authenticated workspace UI
+- [x] Display per-agent comparisons and chronological run trends
+- [x] Display Wilson 95% confidence intervals after evaluations
+- [x] Export JSON/CSV reports with reproducibility manifests
+- [x] Connect email/password auth and workspace creation to the UI
+- [ ] Complete browser E2E coverage for signup/login, RLS, workspace membership and persistence
 - [ ] Semantic evaluation / LLM-as-judge
 
-Checked items above indicate **code merged into `main`**, not production-ready user-facing features.
+Checked items indicate implemented code; final production readiness requires validated authentication and end-to-end workflows.
 
 ## 🤝 Contributing
 
