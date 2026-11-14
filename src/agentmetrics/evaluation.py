@@ -26,15 +26,16 @@ def evaluate(records: Iterable[Mapping]) -> dict:
             raise ValueError(f"Record {index}: invalid latency_ms")
         if isinstance(cost, bool) or not isinstance(cost, (int, float)) or not 0 <= cost < float("inf"):
             raise ValueError(f"Record {index}: invalid cost_usd")
-    correct = sum(
+    record_matches = [
         item["expected"].strip().casefold() == item["predicted"].strip().casefold()
         for item in items
-    )
+    ]
     return {
         "count": len(items),
-        "exact_match_accuracy": correct / len(items),
+        "exact_match_accuracy": sum(record_matches) / len(items),
         "mean_latency_ms": mean(item["latency_ms"] for item in items),
         "total_cost_usd": sum(item.get("cost_usd", 0) for item in items),
+        "record_matches": record_matches,
     }
 
 
