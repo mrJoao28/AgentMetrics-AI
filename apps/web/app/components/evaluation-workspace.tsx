@@ -5,7 +5,7 @@ import WorkspaceConsole from "./workspace-console";
 import { exportCsvReport, exportJsonReport, reproducibilityManifest } from "../lib/reproducibility";
 import { wilsonInterval } from "../lib/confidence-interval";
 
-type Result = { count: number; exact_match_accuracy: number; mean_latency_ms: number; total_cost_usd: number };
+type Result = { count: number; exact_match_accuracy: number; mean_latency_ms: number; total_cost_usd: number; record_matches: boolean[] };
 type RecordRow = {expected:string;predicted:string;latency_ms:number;cost_usd:number};
 const sample:RecordRow[] = [
   {expected:"Refund available",predicted:"Refund available",latency_ms:120,cost_usd:0.001},
@@ -33,7 +33,7 @@ function makeDemo(index: number): RecordRow[] {
   });
 }
 
-export type DashboardEvaluation = { metrics: Result; records: RecordRow[]; source: string };
+export type DashboardEvaluation = { metrics: Result; records: RecordRow[]; matches: boolean[]; source: string };
 export default function EvaluationWorkspace({ onCompleted }: { onCompleted?: (evaluation: DashboardEvaluation | null) => void }) {
   const [rows,setRows] = useState<RecordRow[]>(sample);
   const [scenarioIndex,setScenarioIndex] = useState(0);
@@ -47,8 +47,12 @@ export default function EvaluationWorkspace({ onCompleted }: { onCompleted?: (ev
       const response = await fetch("/api/evaluate",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({records})});
       const body = await response.json();
       if (!response.ok) throw new Error(body.error ?? body.detail ?? "Falha na avaliação");
-      setResult(body as Result);
-      onCompleted?.({ metrics: body as Result, records, source: recordSource });
+      const evaluated = body as Result;
+      if (!Array.isArray(evaluated.record_matches) || evaluated.record_matches.length !== records.length) {
+        throw new Error("Resposta do motor Python sem decisões por registro.");
+      }
+      setResult(evaluated);
+      onCompleted?.({ metrics: evaluated, records, matches: evaluated.record_matches, source: recordSource });
     } catch(e) {setError(e instanceof Error?e.message:"Erro desconhecido");}
     finally {setBusy(false);}
   }
@@ -79,8 +83,8 @@ export default function EvaluationWorkspace({ onCompleted }: { onCompleted?: (ev
       setRows(parsed);setSource(`Arquivo importado — ${file.name}`);
     }catch(e){setError(e instanceof Error?e.message:"Falha na leitura");}
   }
-  const successes = rows.filter(r => r.expected.trim().toLowerCase() === r.predicted.trim().toLowerCase()).length;
-  const confidence = result ? wilsonInterval(successes, rows.length) : null;
+  const successes = result?.record_matches.filter(Boolean).length ?? 0;
+  const confidence = result ? wilsonInterval(successes, result.count) : null;
   async function exportCurrent(type: "json" | "csv") {
     if (!result) return;
     const content = type === "csv"
@@ -107,7 +111,7 @@ export default function EvaluationWorkspace({ onCompleted }: { onCompleted?: (ev
       <button type="button" className="eval-run" onClick={() => void exportCurrent("json")}>Baixar relatório JSON</button>
       <button type="button" className="eval-run" onClick={() => void exportCurrent("csv")}>Baixar CSV</button>
     </div>}
-    <p className="eval-method">Acurácia por correspondência exata normalizada (espaços externos e caixa); não representa precisão, recall ou qualidade semântica.</p>
+    <p className="eval-method">Acurácia por correspondência exata (trim + casefold Unicode); não representa precisão, recall ou qualidade semântica.</p>
   </section><WorkspaceConsole records={rows} metrics={result} source={source} onLoadDataset={(saved, name) => {
       setRows(saved.map(r => ({expected:r.expected,predicted:r.predicted,latency_ms:r.latency_ms,cost_usd:r.cost_usd ?? 0})));
       setSource("Dataset salvo — " + name);

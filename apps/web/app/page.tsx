@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import EvaluationWorkspace, { type DashboardEvaluation } from "./components/evaluation-workspace";
+import { buildAccuracyGroups, buildLatencyHistogram } from "./lib/dashboard-metrics";
 import { Activity, ArrowUpRight, BarChart3, CalendarDays, Database, FileText, FlaskConical, GitCompareArrows, Settings2, ShieldCheck, Target, Zap, Coins } from "lucide-react";
 
 function BrandMark({ size = 34 }: { size?: number }) {
@@ -24,33 +25,19 @@ const nav = [
 function formatPct(value: number) { return new Intl.NumberFormat("pt-BR", { style: "percent", maximumFractionDigits: 1 }).format(value); }
 function formatNumber(value: number) { return new Intl.NumberFormat("pt-BR").format(value); }
 function formatUSD(value: number) { return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "USD", minimumFractionDigits: 3, maximumFractionDigits: 4 }).format(value); }
-function correct(expected: string, predicted: string) { return expected.trim().toLowerCase() === predicted.trim().toLowerCase(); }
-
 export default function Home() {
   const [evaluation, setEvaluation] = useState<DashboardEvaluation | null>(null);
   const [activeNav, setActiveNav] = useState("#visao-geral");
 
-  const groups = useMemo(() => {
-    if (!evaluation) return [];
-    const records = evaluation.records;
-    return Array.from({ length: Math.min(3, records.length) }, (_, i) => {
-      const start = Math.floor(i * records.length / Math.min(3, records.length));
-      const end = Math.floor((i + 1) * records.length / Math.min(3, records.length));
-      const sample = records.slice(start, end);
-      return { label: `Lote ${i + 1}`, count: sample.length, accuracy: sample.filter(r => correct(r.expected, r.predicted)).length / sample.length };
-    });
-  }, [evaluation]);
+  const groups = useMemo(
+    () => evaluation ? buildAccuracyGroups(evaluation.matches) : [],
+    [evaluation],
+  );
 
-  const latency = useMemo(() => {
-    if (!evaluation) return [];
-    const values = evaluation.records.map(r => r.latency_ms).filter(Number.isFinite);
-    const max = Math.max(1, ...values);
-    const size = max / 5;
-    return Array.from({ length: 5 }, (_, i) => {
-      const count = values.filter(v => (i === 4 ? v >= i * size : v >= i * size && v < (i + 1) * size)).length;
-      return { label: `${Math.round(i * size)}–${Math.round((i + 1) * size)} ms`, count };
-    });
-  }, [evaluation]);
+  const latency = useMemo(
+    () => evaluation ? buildLatencyHistogram(evaluation.records) : [],
+    [evaluation],
+  );
 
   const hasData = Boolean(evaluation);
   const metrics = [
@@ -84,9 +71,9 @@ export default function Home() {
         <section id="avaliacoes"><EvaluationWorkspace onCompleted={setEvaluation}/></section>
         <div className="bottom-grid">
           <section className="panel evaluations"><div className="panel-heading"><h2>Registros da última avaliação</h2><span>{hasData ? "Dados analisados" : "Nenhum registro"}</span></div>
-            <div className="table-wrap"><table><thead><tr><th>Registro</th><th>Resultado</th><th>Latência</th><th>Custo</th></tr></thead><tbody>{evaluation?.records.slice(0,8).map((r,i)=><tr key={i}><td>#{i+1}</td><td><span className={correct(r.expected,r.predicted)?"result success":"result error"}>{correct(r.expected,r.predicted)?"Correto":"Divergente"}</span></td><td>{r.latency_ms} ms</td><td>{formatUSD(r.cost_usd)}</td></tr>) ?? <tr><td colSpan={4}>Execute uma avaliação para visualizar registros.</td></tr>}</tbody></table></div>
+            <div className="table-wrap"><table><thead><tr><th>Registro</th><th>Resultado</th><th>Latência</th><th>Custo</th></tr></thead><tbody>{evaluation?.records.slice(0,8).map((r,i)=><tr key={i}><td>#{i+1}</td><td><span className={evaluation.matches[i]?"result success":"result error"}>{evaluation.matches[i]?"Correto":"Divergente"}</span></td><td>{r.latency_ms} ms</td><td>{formatUSD(r.cost_usd)}</td></tr>) ?? <tr><td colSpan={4}>Execute uma avaliação para visualizar registros.</td></tr>}</tbody></table></div>
           </section>
-          <section className="panel experiments" id="metodologia"><h2>Metodologia transparente</h2><p>Entenda o que cada resultado realmente representa.</p><div className="method-details"><p><strong>Exatidão:</strong> comparação de texto após remover espaços externos e normalizar maiúsculas/minúsculas.</p><p><strong>Latência e custo:</strong> agregados dos valores fornecidos no JSONL, sem cronômetro ou medição de tokens.</p><p><strong>Dados de demonstração:</strong> exemplos sintéticos, não resultados de modelos reais.</p><p><strong>Persistência:</strong> avaliações de usuários autenticados podem ser salvas em workspaces Supabase.</p></div></section>
+          <section className="panel experiments" id="metodologia"><h2>Metodologia transparente</h2><p>Entenda o que cada resultado realmente representa.</p><div className="method-details"><p><strong>Exatidão:</strong> comparação de texto após remover espaços externos e aplicar trim + casefold Unicode.</p><p><strong>Latência e custo:</strong> agregados dos valores fornecidos no JSONL, sem cronômetro ou medição de tokens.</p><p><strong>Dados de demonstração:</strong> exemplos sintéticos, não resultados de modelos reais.</p><p><strong>Persistência:</strong> avaliações de usuários autenticados podem ser salvas em workspaces Supabase.</p></div></section>
         </div>
         <footer>AgentMetrics AI · <a href="https://github.com/mrJoao28/AgentMetrics-AI" target="_blank" rel="noopener noreferrer">Código aberto <ArrowUpRight size={12}/></a> · <a href="https://github.com/mrJoao28/AgentMetrics-AI/blob/main/LICENSE" target="_blank" rel="noopener noreferrer">Licença MIT</a> · Métricas reproduzíveis</footer>
       </div>

@@ -3,6 +3,7 @@ import { wilsonInterval } from "../app/lib/confidence-interval";
 import { compareAgents, agentTrend } from "../app/lib/run-analytics";
 import { exportCsvReport, exportJsonReport, reproducibilityManifest } from "../app/lib/reproducibility";
 import type { SavedRun } from "../app/lib/evaluation-store";
+import { buildAccuracyGroups, buildLatencyHistogram } from "../app/lib/dashboard-metrics";
 
 const row = { expected: "yes", predicted: "yes", latency_ms: 100, cost_usd: 0.001 };
 const runs: SavedRun[] = [
@@ -46,5 +47,41 @@ describe("reproducible exports", () => {
     expect(a.dataset_sha256).toMatch(/^[0-9a-f]{64}$/);
     expect(a.dataset_sha256).toBe(b.dataset_sha256);
     expect(JSON.parse(exportJsonReport(a,[row])).manifest.dataset_sha256).toBe(a.dataset_sha256);
+  });
+});
+
+
+describe("live dashboard metrics", () => {
+  it("partitions small datasets into non-empty batches using backend match decisions", () => {
+    expect(buildAccuracyGroups([])).toEqual([]);
+    expect(buildAccuracyGroups([true])).toEqual([
+      { label: "Lote 1", count: 1, accuracy: 1 },
+    ]);
+    expect(buildAccuracyGroups([true, false, true, true, false])).toEqual([
+      { label: "Lote 1", count: 1, accuracy: 1 },
+      { label: "Lote 2", count: 2, accuracy: 0.5 },
+      { label: "Lote 3", count: 2, accuracy: 0.5 },
+    ]);
+  });
+
+  it("counts latency values on bin boundaries exactly once", () => {
+    const histogram = buildLatencyHistogram(
+      [0, 19.9, 20, 39.9, 40, 59.9, 60, 79.9, 80, 100].map(latency_ms => ({ latency_ms })),
+    );
+    expect(histogram.map(bin => bin.count)).toEqual([2, 2, 2, 2, 2]);
+    expect(histogram.map(bin => bin.label)).toEqual([
+      "0–20 ms", "20–40 ms", "40–60 ms", "60–80 ms", "80–100 ms",
+    ]);
+  });
+
+  it("places zero latency values in the first bin and ignores invalid values", () => {
+    const histogram = buildLatencyHistogram([
+      { latency_ms: 0 },
+      { latency_ms: 0 },
+      { latency_ms: Number.NaN },
+      { latency_ms: Number.POSITIVE_INFINITY },
+    ]);
+    expect(histogram.map(bin => bin.count)).toEqual([2, 0, 0, 0, 0]);
+    expect(buildLatencyHistogram([])).toEqual([]);
   });
 });
