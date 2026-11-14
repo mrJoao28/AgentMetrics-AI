@@ -9,7 +9,8 @@ def evaluate(records: Iterable[Mapping]) -> dict:
 
     Each record requires expected and predicted strings, latency_ms >= 0,
     and optionally cost_usd >= 0. Accuracy is exact match after stripping
-    surrounding whitespace and casefolding; it is NOT semantic correctness.
+    surrounding whitespace and Unicode casefolding; it is NOT semantic correctness.
+    The response also includes record_matches, the exact boolean decision for each input row.
     """
     items = list(records)
     if not items:
