@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 
 export type EvaluationRecord = { expected: string; predicted: string; latency_ms: number; cost_usd?: number };
-export type EvaluationMetrics = { count: number; exact_match_accuracy: number; mean_latency_ms: number; total_cost_usd: number };
+export type EvaluationMetrics = { count: number; exact_match_accuracy: number; mean_latency_ms: number; total_cost_usd: number; record_matches?: boolean[] };
 export type SavedRun = { id: string; agent_name: string; created_at: string; metrics: EvaluationMetrics; manifest: Record<string, unknown>; records: EvaluationRecord[] };
 
 export function getSupabase(token: string) {
