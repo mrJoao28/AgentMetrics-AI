@@ -20,7 +20,6 @@ function download(filename: string, data: string, mime: string) {
   anchor.click();
   URL.revokeObjectURL(objectUrl);
 }
-function normalize(value: string) { return value.trim().toLowerCase(); }
 function safeName(value: string) { return value.replace(/[^a-z0-9_-]+/gi, "-").slice(0, 60); }
 
 export default function WorkspaceConsole({ records, metrics, source, onLoadDataset }: Props) {
@@ -156,8 +155,11 @@ export default function WorkspaceConsole({ records, metrics, source, onLoadDatas
   const comparisons = useMemo(() => compareAgents(savedRuns), [savedRuns]);
   const selectedRun = savedRuns.find(r => r.id === selectedRunId) ?? null;
   const selectedTrend = selectedRun ? agentTrend(savedRuns, selectedRun.agent_name) : [];
-  const successes = selectedRun?.records.filter(r => normalize(r.expected) === normalize(r.predicted)).length ?? 0;
-  const interval = selectedRun ? wilsonInterval(successes, selectedRun.records.length) : null;
+  const storedMatches = selectedRun?.metrics.record_matches;
+  const hasStoredMatches = Boolean(selectedRun && storedMatches?.length === selectedRun.records.length);
+  const interval = hasStoredMatches
+    ? wilsonInterval(storedMatches!.filter(Boolean).length, selectedRun!.records.length)
+    : null;
 
   function exportSelected(format: "json" | "csv") {
     if (!selectedRun) return;
@@ -204,6 +206,7 @@ export default function WorkspaceConsole({ records, metrics, source, onLoadDatas
             <label>Avaliação<select value={selectedRunId} onChange={e => setSelectedRunId(e.target.value)}>{savedRuns.map(r => <option key={r.id} value={r.id}>{r.agent_name} · {new Date(r.created_at).toLocaleString("pt-BR")}</option>)}</select></label>
             {selectedRun && <div className="workspace-summary"><span>{selectedRun.metrics.count} registros</span><span>{(selectedRun.metrics.exact_match_accuracy * 100).toFixed(1)}% exatidão</span><span>{selectedRun.metrics.mean_latency_ms.toFixed(0)} ms</span></div>}
             {interval && <p>Intervalo de confiança Wilson (95%): {(interval.lower * 100).toFixed(1)}% a {(interval.upper * 100).toFixed(1)}%.</p>}
+            {selectedRun && !hasStoredMatches && <p>Intervalo de confiança indisponível para esta avaliação antiga; execute e salve novamente para registrar as decisões por item.</p>}
             <div className="eval-controls"><button type="button" className="eval-run secondary-action" onClick={() => exportSelected("json")}>Exportar JSON</button><button type="button" className="eval-run secondary-action" onClick={() => exportSelected("csv")}>Exportar CSV</button></div>
           </>}
           <h3>Comparação por agente</h3>
