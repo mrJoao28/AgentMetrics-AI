@@ -2,6 +2,17 @@ export type AccuracyGroup = { label: string; count: number; accuracy: number };
 export type LatencyRecord = { latency_ms: number };
 export type LatencyBin = { label: string; count: number; lower: number; upper: number };
 
+export function readRecordMatches(value: unknown, expectedCount: number): boolean[] | null {
+  if (
+    !Array.isArray(value) ||
+    value.length !== expectedCount ||
+    !value.every((item): item is boolean => typeof item === "boolean")
+  ) {
+    return null;
+  }
+  return value;
+}
+
 export function buildAccuracyGroups(matches: readonly boolean[], maxGroups = 3): AccuracyGroup[] {
   if (matches.length === 0 || !Number.isInteger(maxGroups) || maxGroups < 1) return [];
   const groupCount = Math.min(maxGroups, matches.length);

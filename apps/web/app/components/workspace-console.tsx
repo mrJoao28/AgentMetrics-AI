@@ -206,7 +206,7 @@ export default function WorkspaceConsole({ records, metrics, source, onLoadDatas
             <label>Avaliação<select value={selectedRunId} onChange={e => setSelectedRunId(e.target.value)}>{savedRuns.map(r => <option key={r.id} value={r.id}>{r.agent_name} · {new Date(r.created_at).toLocaleString("pt-BR")}</option>)}</select></label>
             {selectedRun && <div className="workspace-summary"><span>{selectedRun.metrics.count} registros</span><span>{(selectedRun.metrics.exact_match_accuracy * 100).toFixed(1)}% exatidão</span><span>{selectedRun.metrics.mean_latency_ms.toFixed(0)} ms</span></div>}
             {interval && <p>Intervalo de confiança Wilson (95%): {(interval.lower * 100).toFixed(1)}% a {(interval.upper * 100).toFixed(1)}%.</p>}
-            {selectedRun && !hasStoredMatches && <p>Intervalo de confiança indisponível para esta avaliação antiga; execute e salve novamente para registrar as decisões por item.</p>}
+            {selectedRun && !hasStoredMatches && <p>Esta avaliação não contém decisões individuais (backend anterior ou rollout em andamento). O intervalo Wilson ficará disponível após atualizar o serviço Python e salvar uma nova avaliação.</p>}
             <div className="eval-controls"><button type="button" className="eval-run secondary-action" onClick={() => exportSelected("json")}>Exportar JSON</button><button type="button" className="eval-run secondary-action" onClick={() => exportSelected("csv")}>Exportar CSV</button></div>
           </>}
           <h3>Comparação por agente</h3>

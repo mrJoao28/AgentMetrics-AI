@@ -3,7 +3,7 @@ import { wilsonInterval } from "../app/lib/confidence-interval";
 import { compareAgents, agentTrend } from "../app/lib/run-analytics";
 import { exportCsvReport, exportJsonReport, reproducibilityManifest } from "../app/lib/reproducibility";
 import type { SavedRun } from "../app/lib/evaluation-store";
-import { buildAccuracyGroups, buildLatencyHistogram } from "../app/lib/dashboard-metrics";
+import { buildAccuracyGroups, buildLatencyHistogram, readRecordMatches } from "../app/lib/dashboard-metrics";
 
 const row = { expected: "yes", predicted: "yes", latency_ms: 100, cost_usd: 0.001 };
 const runs: SavedRun[] = [
@@ -52,6 +52,13 @@ describe("reproducible exports", () => {
 
 
 describe("live dashboard metrics", () => {
+  it("keeps aggregate evaluation results usable when an older backend omits per-record decisions", () => {
+    expect(readRecordMatches(undefined, 2)).toBeNull();
+    expect(readRecordMatches([true], 2)).toBeNull();
+    expect(readRecordMatches([true, "false"], 2)).toBeNull();
+    expect(readRecordMatches([true, false], 2)).toEqual([true, false]);
+  });
+
   it("partitions small datasets into non-empty batches using backend match decisions", () => {
     expect(buildAccuracyGroups([])).toEqual([]);
     expect(buildAccuracyGroups([true])).toEqual([
