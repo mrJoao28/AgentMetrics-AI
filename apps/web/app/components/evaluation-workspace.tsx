@@ -4,8 +4,9 @@ import { useState } from "react";
 import WorkspaceConsole from "./workspace-console";
 import { exportCsvReport, exportJsonReport, reproducibilityManifest } from "../lib/reproducibility";
 import { wilsonInterval } from "../lib/confidence-interval";
+import { readRecordMatches } from "../lib/dashboard-metrics";
 
-type Result = { count: number; exact_match_accuracy: number; mean_latency_ms: number; total_cost_usd: number };
+type Result = { count: number; exact_match_accuracy: number; mean_latency_ms: number; total_cost_usd: number; record_matches?: boolean[] };
 type RecordRow = {expected:string;predicted:string;latency_ms:number;cost_usd:number};
 const sample:RecordRow[] = [
   {expected:"Refund available",predicted:"Refund available",latency_ms:120,cost_usd:0.001},
@@ -33,7 +34,7 @@ function makeDemo(index: number): RecordRow[] {
   });
 }
 
-export type DashboardEvaluation = { metrics: Result; records: RecordRow[]; source: string };
+export type DashboardEvaluation = { metrics: Result; records: RecordRow[]; matches: boolean[] | null; source: string };
 export default function EvaluationWorkspace({ onCompleted }: { onCompleted?: (evaluation: DashboardEvaluation | null) => void }) {
   const [rows,setRows] = useState<RecordRow[]>(sample);
   const [scenarioIndex,setScenarioIndex] = useState(0);
@@ -47,8 +48,11 @@ export default function EvaluationWorkspace({ onCompleted }: { onCompleted?: (ev
       const response = await fetch("/api/evaluate",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({records})});
       const body = await response.json();
       if (!response.ok) throw new Error(body.error ?? body.detail ?? "Falha na avaliação");
-      setResult(body as Result);
-      onCompleted?.({ metrics: body as Result, records, source: recordSource });
+      const evaluated = body as Result;
+      const recordMatches = readRecordMatches(evaluated.record_matches, records.length);
+      const normalized: Result = { ...evaluated, record_matches: recordMatches ?? undefined };
+      setResult(normalized);
+      onCompleted?.({ metrics: normalized, records, matches: recordMatches, source: recordSource });
     } catch(e) {setError(e instanceof Error?e.message:"Erro desconhecido");}
     finally {setBusy(false);}
   }
@@ -79,8 +83,8 @@ export default function EvaluationWorkspace({ onCompleted }: { onCompleted?: (ev
       setRows(parsed);setSource(`Arquivo importado — ${file.name}`);
     }catch(e){setError(e instanceof Error?e.message:"Falha na leitura");}
   }
-  const successes = rows.filter(r => r.expected.trim().toLowerCase() === r.predicted.trim().toLowerCase()).length;
-  const confidence = result ? wilsonInterval(successes, rows.length) : null;
+  const successes = result?.record_matches?.filter(Boolean).length ?? 0;
+  const confidence = result?.record_matches ? wilsonInterval(successes, result.count) : null;
   async function exportCurrent(type: "json" | "csv") {
     if (!result) return;
     const content = type === "csv"
@@ -102,12 +106,13 @@ export default function EvaluationWorkspace({ onCompleted }: { onCompleted?: (ev
     <div className="eval-source">Fonte: {source} · {rows.length.toLocaleString("pt-BR")} registros</div>
     {error&&<p className="eval-error" role="alert">{error}</p>}
     {result&&<div className="eval-results" aria-live="polite"><div><small>Registros avaliados</small><strong>{result.count.toLocaleString("pt-BR")}</strong></div><div><small>Correspondência exata</small><strong>{(result.exact_match_accuracy*100).toFixed(1)}%</strong></div><div><small>Latência média</small><strong>{result.mean_latency_ms.toFixed(1)} ms</strong></div><div><small>Custo total</small><strong>US$ {result.total_cost_usd.toFixed(4)}</strong></div></div>}
+    {result && !result.record_matches && <p className="workspace-notice" role="status">O serviço Python ainda não fornece decisões por registro. As métricas agregadas continuam disponíveis; os gráficos por lote e o intervalo Wilson serão habilitados quando o backend for atualizado.</p>}
     {result && <div className="eval-controls">
       {confidence && <span className="eval-source">Intervalo Wilson 95%: {(confidence.lower * 100).toFixed(1)}% – {(confidence.upper * 100).toFixed(1)}%</span>}
       <button type="button" className="eval-run" onClick={() => void exportCurrent("json")}>Baixar relatório JSON</button>
       <button type="button" className="eval-run" onClick={() => void exportCurrent("csv")}>Baixar CSV</button>
     </div>}
-    <p className="eval-method">Acurácia por correspondência exata normalizada (espaços externos e caixa); não representa precisão, recall ou qualidade semântica.</p>
+    <p className="eval-method">Acurácia por correspondência exata (trim + casefold Unicode); não representa precisão, recall ou qualidade semântica.</p>
   </section><WorkspaceConsole records={rows} metrics={result} source={source} onLoadDataset={(saved, name) => {
       setRows(saved.map(r => ({expected:r.expected,predicted:r.predicted,latency_ms:r.latency_ms,cost_usd:r.cost_usd ?? 0})));
       setSource("Dataset salvo — " + name);
